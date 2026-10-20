@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: railway-fault-detection
+    env: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    autoDeploy: true

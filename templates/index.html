@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rail Track Fault Detection System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #f8fafc; 
+            color: #0f172a; 
+            font-family: 'Inter', sans-serif; 
+            line-height: 1.6;
+        }
+        .navbar-custom { 
+            background: #0f172a; 
+            color: #ffffff; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15); 
+        }
+        .card-custom { 
+            background: #ffffff; 
+            border: 2px solid #cbd5e1; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+        }
+        .instruction-box {
+            background: #eff6ff;
+            border: 2px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 1.25rem;
+            color: #1e3a8a;
+        }
+        .drop-zone {
+            border: 3px dashed #2563eb;
+            border-radius: 12px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background: #f0fdf4;
+            color: #0f172a;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #1d4ed8;
+            background: #dcfce7;
+        }
+        .image-preview { 
+            max-width: 100%; 
+            height: auto; 
+            border-radius: 8px; 
+            border: 2px solid #cbd5e1; 
+        }
+        .badge-healthy { 
+            background-color: #16a34a !important; 
+            color: #ffffff !important; 
+            font-size: 1.1rem;
+            padding: 0.5rem 1rem;
+        }
+        .badge-defective { 
+            background-color: #dc2626 !important; 
+            color: #ffffff !important; 
+            font-size: 1.1rem;
+            padding: 0.5rem 1rem;
+        }
+        .live-dot { 
+            height: 12px; 
+            width: 12px; 
+            background-color: #22c55e; 
+            border-radius: 50%; 
+            display: inline-block; 
+            animation: blink 1.2s infinite; 
+            margin-right: 6px; 
+        }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+        .table-custom { color: #0f172a; font-size: 1rem; }
+        .table-custom th { background: #f1f5f9; color: #1e293b; font-weight: 700; border-bottom: 2px solid #cbd5e1; }
+        .table-custom td { vertical-align: middle; border-bottom: 1px solid #e2e8f0; }
+        .dataset-btn {
+            font-size: 0.85rem;
+            margin: 3px;
+            transition: all 0.15s ease;
+        }
+        .dataset-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-custom py-3 mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <span class="navbar-brand text-white fw-bold fs-3">
+            🛤️ Rail Track Fault Detection System
+        </span>
+        <span class="badge bg-success fs-6 px-3 py-2">
+            <span class="live-dot"></span> Computer Vision & AI Online
+        </span>
+    </div>
+</nav>
+
+<div class="container">
+    
+    <!-- User Guide Instructions Banner -->
+    <div class="instruction-box mb-4">
+        <h5 class="fw-bold mb-2 fs-4">💡 Railway Track Inspection System:</h5>
+        <div class="row text-dark fs-6">
+            <div class="col-md-6 mb-2">
+                <strong>1. Automated Stream Simulation (Train & Val):</strong><br>
+                Turn on the <strong>Automated Stream</strong> toggle to cycle through and test all <strong>{{ total_images }} images</strong> from <code class="text-primary fw-bold">dataset/train</code> and <code class="text-primary fw-bold">dataset/val</code>.
+            </div>
+            <div class="col-md-6 mb-2">
+                <strong>2. Custom Image Upload / Paste:</strong><br>
+                Drop or paste (<kbd class="bg-dark text-white">Ctrl + V</kbd>) any track photo into the upload box to inspect it instantly.
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Image Upload & Paste Section -->
+        <div class="col-md-6 mb-3">
+            <div class="card card-custom p-4 h-100">
+                <h4 class="fw-bold mb-3 text-dark">📷 Custom Image Upload / Paste</h4>
+                
+                <div class="drop-zone mb-3 text-center" id="dropZone" onclick="document.getElementById('imageInput').click()">
+                    <div class="fs-4 fw-bold text-dark mb-2">📋 Drag, Drop, or Paste (Ctrl + V) Image Here</div>
+                    <div class="text-primary fw-bold fs-6">Or click inside this box to select a file from your computer</div>
+                    <input type="file" id="imageInput" accept="image/*" class="d-none" onchange="handleFileSelect(this)">
+                </div>
+
+                <button type="button" class="btn btn-primary btn-lg w-100 fw-bold fs-5 py-2 mt-auto" id="uploadBtn" onclick="triggerSubmit()">
+                    🔍 Upload & Detect
+                </button>
+            </div>
+        </div>
+
+        <!-- Simulation & Sensor Control -->
+        <div class="col-md-6 mb-3">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold mb-0 text-dark">⚡ Automated Stream Simulation</h4>
+                    <span class="badge bg-primary fs-6">Train: {{ train_total }} | Val: {{ val_total }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="text-secondary fw-semibold d-block">IoT Stream Simulation Mode</span>
+                        <strong id="simStatusText" class="fs-4 text-primary">Idle</strong>
+                        <div id="simProgressText" class="text-muted small">Streams all {{ total_images }} images from dataset/train and dataset/val</div>
+                    </div>
+                    <div class="form-check form-switch fs-2">
+                        <input class="form-check-input" type="checkbox" id="simToggle" onchange="toggleSimulation()">
+                    </div>
+                </div>
+
+                <div class="p-2 mb-3 bg-light rounded border small">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-secondary">Dataset Coverage:</span>
+                        <span class="fw-bold text-dark"><span id="simCounter">0</span> / {{ total_images }} Images Tested</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div id="simProgressBar" class="progress-bar bg-primary" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="mt-auto">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-secondary fw-semibold">Solar Node Battery Level</span>
+                        <span id="batteryText" class="fw-bold text-success">{{ battery }}%</span>
+                    </div>
+                    <div class="progress mt-1" style="height: 18px;">
+                        <div id="batteryBar" class="progress-bar bg-success fw-bold fs-6" style="width: {{ battery }}%;">{{ battery }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Inspection Result Display -->
+        <div class="col-lg-5 mb-4">
+            <div class="card card-custom p-4">
+                <h4 class="fw-bold mb-3 text-dark">📊 Computer Vision Inspection Result</h4>
+                <div id="resultDisplay" class="text-center py-4">
+                    <p class="text-secondary fs-5">No image analyzed yet. Turn on Automated Stream Simulation or upload an image to begin.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Table -->
+        <div class="col-lg-7 mb-4">
+            <div class="card card-custom p-4">
+                <h4 class="fw-bold mb-3 text-dark">📜 Recent Inspections</h4>
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Source / Image</th>
+                                <th>Status</th>
+                                <th>Confidence</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center text-secondary py-4">No inspection history recorded.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let selectedFile = null;
+
+    function handleFileSelect(input) {
+        if (input.files && input.files[0]) {
+            selectedFile = input.files[0];
+            sendImageFile(selectedFile);
+        }
+    }
+
+    function triggerSubmit() {
+        if (selectedFile) {
+            sendImageFile(selectedFile);
+        } else {
+            document.getElementById('imageInput').click();
+        }
+    }
+
+    async function sendImageFile(file) {
+        const formData = new FormData();
+        formData.append('file', file, file.name || 'pasted_image.png');
+
+        const uploadBtn = document.getElementById('uploadBtn');
+        uploadBtn.disabled = true;
+        uploadBtn.innerText = "⏳ Running Computer Vision...";
+
+        try {
+            const resp = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await resp.json();
+            renderResult(result);
+            fetchHistory();
+        } catch (err) {
+            alert("Error analyzing image: " + err);
+        } finally {
+            uploadBtn.disabled = false;
+            uploadBtn.innerText = "🔍 Upload & Detect";
+        }
+    }
+
+    // --- Clipboard Paste Event Listener (Ctrl + V) ---
+    window.addEventListener('paste', function (e) {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let index = 0; index < items.length; index++) {
+            const item = items[index];
+            if (item.kind === 'file' && item.type.indexOf('image') !== -1) {
+                const blob = item.getAsFile();
+                selectedFile = new File([blob], `pasted_${Date.now()}.png`, { type: blob.type });
+                sendImageFile(selectedFile);
+                break;
+            }
+        }
+    });
+
+    // --- Drag & Drop Event Listeners ---
+    const dropZone = document.getElementById('dropZone');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        }, false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0 && files[0].type.startsWith('image/')) {
+            selectedFile = files[0];
+            sendImageFile(selectedFile);
+        }
+    });
+
+    async function toggleSimulation() {
+        const isChecked = document.getElementById('simToggle').checked;
+        const endpoint = isChecked ? '/simulation/start' : '/simulation/stop';
+        try {
+            await fetch(endpoint, { method: 'POST' });
+            updateStatus();
+        } catch (err) {
+            console.error("Simulation toggle error:", err);
+        }
+    }
+
+    async function updateStatus() {
+        try {
+            const resp = await fetch('/status');
+            const data = await resp.json();
+            
+            document.getElementById('simToggle').checked = data.simulation_running;
+            const simStatusEl = document.getElementById('simStatusText');
+            simStatusEl.innerText = data.simulation_running ? 'Streaming...' : 'Idle';
+            simStatusEl.className = data.simulation_running ? 'fs-4 text-success' : 'fs-4 text-primary';
+
+            if (data.total_dataset_images > 0) {
+                const counter = data.current_index || 0;
+                const total = data.total_dataset_images;
+                const pct = Math.round((counter / total) * 100);
+                const simCounterEl = document.getElementById('simCounter');
+                if (simCounterEl) simCounterEl.innerText = counter;
+                const progBar = document.getElementById('simProgressBar');
+                if (progBar) progBar.style.width = pct + '%';
+                const progText = document.getElementById('simProgressText');
+                if (progText) {
+                    progText.innerText = data.simulation_running 
+                        ? `Simulating image ${counter} of ${total} (cycling through train & val)`
+                        : `Ready to test all ${total} images from dataset/train and dataset/val`;
+                }
+            }
+
+            const battery = data.battery;
+            const batBar = document.getElementById('batteryBar');
+            const batText = document.getElementById('batteryText');
+            if (batBar) {
+                batBar.style.width = battery + '%';
+                batBar.innerText = battery + '%';
+                if (battery < 20) {
+                    batBar.className = 'progress-bar bg-danger fw-bold fs-6';
+                } else if (battery < 50) {
+                    batBar.className = 'progress-bar bg-warning text-dark fw-bold fs-6';
+                } else {
+                    batBar.className = 'progress-bar bg-success fw-bold fs-6';
+                }
+            }
+            if (batText) batText.innerText = battery + '%';
+
+            if (data.last_detection) {
+                renderResult(data.last_detection);
+            }
+        } catch (err) {
+            console.error("Status update error:", err);
+        }
+    }
+
+    function renderResult(res) {
+        const isDefective = (res.status === 'DEFECTIVE' || res.status === 'FAULT');
+        const badgeClass = isDefective ? 'badge-defective' : 'badge-healthy';
+        const statusTitle = isDefective ? 'DEFECTIVE' : 'HEALTHY';
+        
+        let defectDetails = '';
+        if (isDefective && res.defects && res.defects.length > 0) {
+            const faults = res.defects.map(d => `<span class="badge bg-danger fs-6 me-1 mb-1">${d.class} (${d.confidence}%)</span>`).join(' ');
+            defectDetails = `<div class="mt-3 text-start">
+                <div class="fw-bold text-danger mb-1 fs-5">⚠️ Defects & Faults Localized:</div>
+                <div class="mb-2">${faults}</div>
+                <div class="p-2 bg-light border border-danger rounded small">
+                    <strong>Computer Vision Diagnostics:</strong> Crack / fracture located on rail surface with high-tech corner bounding box overlay.
+                </div>
+            </div>`;
+        } else if (isDefective) {
+            defectDetails = `<div class="mt-3 fs-5 fw-bold text-danger">⚠️ Broken Rail Track / Defect Detected</div>`;
+        } else {
+            defectDetails = `<div class="mt-3 text-start">
+                <div class="fs-5 fw-bold text-success mb-2">🟢 Track Healthy & Clear</div>
+                <div class="p-2 bg-light border border-success rounded small text-dark">
+                    <strong>Computer Vision Verification:</strong> Rail head surface intact, continuous alignment verified, no cracks or obstacles detected.
+                </div>
+            </div>`;
+        }
+
+        document.getElementById('resultDisplay').innerHTML = `
+            <img src="${res.image_url}" class="image-preview mb-3">
+            <h3 class="mb-2">Status: <span class="badge ${badgeClass}">${statusTitle}</span></h3>
+            <p class="mb-1 text-dark fs-4">Confidence: <strong>${res.confidence}%</strong></p>
+            <small class="text-secondary d-block mb-2">Inference Speed: ${res.inference_time_ms} ms</small>
+            ${defectDetails}
+        `;
+    }
+
+    async function fetchHistory() {
+        try {
+            const resp = await fetch('/history');
+            const history = await resp.json();
+            const tbody = document.getElementById('historyTableBody');
+            
+            if (!history || history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-secondary py-4">No inspection history recorded.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = history.map(item => {
+                const isDef = (item.status === 'DEFECTIVE' || item.status === 'FAULT');
+                const badge = isDef ? 'badge-defective' : 'badge-healthy';
+                
+                let splitBadge = '';
+                if (item.split === 'VAL') {
+                    splitBadge = '<span class="badge bg-warning text-dark me-1">VAL</span>';
+                } else if (item.split === 'TRAIN') {
+                    splitBadge = '<span class="badge bg-info text-dark me-1">TRAIN</span>';
+                } else if (item.split === 'UPLOAD') {
+                    splitBadge = '<span class="badge bg-secondary me-1">UPLOAD</span>';
+                }
+
+                const rawName = item.filename ? item.filename.replace(/^\[(TRAIN|VAL|UPLOAD)\]\s*/i, '') : '-';
+
+                return `
+                    <tr>
+                        <td class="fw-semibold">${item.timestamp}</td>
+                        <td class="text-truncate" style="max-width: 170px;">${splitBadge} ${rawName}</td>
+                        <td><span class="badge ${badge}">${item.status}</span></td>
+                        <td class="fw-bold">${item.confidence}%</td>
+                        <td><a href="${item.image_url}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold">View Image</a></td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (history.length > 0 && !document.querySelector('#resultDisplay img')) {
+                renderResult(history[0]);
+            }
+        } catch (err) {
+            console.error("History error:", err);
+        }
+    }
+
+    // Refresh status and history periodically
+    setInterval(updateStatus, 2000);
+    setInterval(fetchHistory, 2000);
+
+    // Initial load
+    updateStatus();
+    fetchHistory();
+</script>
+</body>
+</html>

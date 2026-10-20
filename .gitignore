@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Allow essential trained models for cloud deployment
+!model.pt
+!yolov8n.pt
+!model.onnx
+
+# Ignore training runs output
+runs/
+
+# User uploads and temporary files (keep directory placeholder)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Cache files
+*.cache
+
+# OS specific
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Project specific
+dataset_path.txt

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Railway Inspection System{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+        }
+
+        .navbar-custom {
+            background-color: #161b22;
+            border-bottom: 2px solid #30363d;
+        }
+
+        .nav-link {
+            color: #8b949e !important;
+            font-weight: 600;
+            padding: 0.6rem 1rem !important;
+            border-radius: 6px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #ffffff !important;
+            background-color: #21262d;
+        }
+
+        .card-custom {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+        }
+
+        .badge-low { background-color: #238636; color: white; }
+        .badge-medium { background-color: #d29922; color: black; }
+        .badge-high { background-color: #db6d28; color: white; }
+        .badge-critical { background-color: #da3633; color: white; }
+
+        .live-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #da3633;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.2s infinite;
+            margin-right: 5px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        .table-custom {
+            --bs-table-bg: #161b22;
+            --bs-table-hover-bg: #21262d;
+            color: #c9d1d9;
+            border-color: #30363d;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Simple Clear Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2 text-white fw-bold" href="/">
+                <i class="fa-solid fa-train text-info fs-3"></i>
+                <span>Railway AI Track Inspector</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto ms-lg-4 gap-2">
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="/">
+                            <i class="fa-solid fa-chart-pie me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'inspector' %}active{% endif %}" href="/inspector">
+                            <i class="fa-solid fa-camera me-1"></i> Upload & Inspect
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'history' %}active{% endif %}" href="/history-page">
+                            <i class="fa-solid fa-list me-1"></i> Inspection History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'iot' %}active{% endif %}" href="/iot-monitoring">
+                            <i class="fa-solid fa-microchip me-1"></i> IoT Sensors
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'live' %}active{% endif %}" href="/live-camera">
+                            <i class="fa-solid fa-video me-1"></i> Live Stream
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-dark border border-secondary py-2 px-3 text-light">
+                        <span class="live-dot"></span> System Ready
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="container-fluid px-4 py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Simple Footer -->
+    <footer class="text-center py-3 text-muted border-top border-secondary mt-5" style="background-color: #161b22;">
+        <small>AI-Powered Railway Track Defect Inspection Platform | YOLOv8 Computer Vision</small>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

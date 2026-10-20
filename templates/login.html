@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Inspector Login | Railway System{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-md-5 col-lg-4">
+        <div class="industrial-card p-4">
+            <div class="text-center mb-4">
+                <i class="fa-solid fa-user-shield fs-1 text-cyan mb-2"></i>
+                <h4 class="fw-bold">Railway Inspector Portal</h4>
+                <p class="small text-muted mb-0">Authorized Railway Engineering Staff Authentication</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold">Inspector Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" id="loginUsername" class="form-control bg-dark text-light border-secondary" placeholder="e.g. inspector_admin" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-semibold">Security Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-muted"><i class="fa-solid fa-key"></i></span>
+                        <input type="password" id="loginPassword" class="form-control bg-dark text-light border-secondary" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-cyan w-100 py-2 fw-semibold">
+                    <i class="fa-solid fa-right-to-bracket me-1"></i> Authenticate & Login
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            const res = await fetch('/auth/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert("Login Successful! Welcome " + data.user.role);
+                window.location.href = '/';
+            } else {
+                alert("Authentication failed: " + data.detail);
+            }
+        } catch(err) {
+            alert("Error logging in.");
+        }
+    });
+</script>
+{% endblock %}

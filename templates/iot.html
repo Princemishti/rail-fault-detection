@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% set active_page = "iot" %}
+
+{% block title %}IoT Track Telemetry | Railway System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fa-solid fa-microchip text-info me-2"></i>IoT Real-Time Railway Track Telemetry</h2>
+        <p class="text-muted mb-0">Live sensor monitoring of rail temperature, structural stress, mechanical vibration & ambient moisture with threshold alerts</p>
+    </div>
+    <div>
+        <button class="btn btn-outline-warning" onclick="fetchIoTData(true)">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i> Simulate High Stress Fault
+        </button>
+    </div>
+</div>
+
+<!-- Telemetry Live Sensor Cards -->
+<div class="row g-3 mb-4">
+    <!-- Rail Temperature -->
+    <div class="col-md-3">
+        <div class="industrial-card p-4 text-center border-top border-4 border-danger" id="card-temp">
+            <i class="fa-solid fa-temperature-high fs-1 text-danger mb-2"></i>
+            <h6 class="text-muted text-uppercase fw-semibold">Rail Temperature</h6>
+            <div class="stat-badge text-white my-2"><span id="val-temp">--</span> °C</div>
+            <small class="text-muted" id="status-temp">Threshold: Safe &lt; 55.0°C</small>
+        </div>
+    </div>
+
+    <!-- Track Vibration -->
+    <div class="col-md-3">
+        <div class="industrial-card p-4 text-center border-top border-4 border-warning" id="card-vib">
+            <i class="fa-solid fa-wave-square fs-1 text-warning mb-2"></i>
+            <h6 class="text-muted text-uppercase fw-semibold">Track Vibration</h6>
+            <div class="stat-badge text-white my-2"><span id="val-vib">--</span> g</div>
+            <small class="text-muted" id="status-vib">Threshold: Safe &lt; 2.50 g</small>
+        </div>
+    </div>
+
+    <!-- Rail Stress -->
+    <div class="col-md-3">
+        <div class="industrial-card p-4 text-center border-top border-4 border-info" id="card-stress">
+            <i class="fa-solid fa-compress fs-1 text-info mb-2"></i>
+            <h6 class="text-muted text-uppercase fw-semibold">Rail Mechanical Stress</h6>
+            <div class="stat-badge text-white my-2"><span id="val-stress">--</span> MPa</div>
+            <small class="text-muted" id="status-stress">Threshold: Safe &lt; 300.0 MPa</small>
+        </div>
+    </div>
+
+    <!-- Ambient Humidity -->
+    <div class="col-md-3">
+        <div class="industrial-card p-4 text-center border-top border-4 border-success" id="card-humidity">
+            <i class="fa-solid fa-droplet fs-1 text-success mb-2"></i>
+            <h6 class="text-muted text-uppercase fw-semibold">Track Moisture / Humidity</h6>
+            <div class="stat-badge text-white my-2"><span id="val-humidity">--</span> %</div>
+            <small class="text-muted" id="status-humidity">Threshold: Safe &lt; 90.0 %</small>
+        </div>
+    </div>
+</div>
+
+<!-- Main Section: Live Sensor Chart & Alerts Feed -->
+<div class="row g-4 mb-4">
+    <!-- Live Telemetry Stream Chart -->
+    <div class="col-lg-8">
+        <div class="industrial-card p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-line text-cyan me-2"></i>Real-Time IoT Sensor Trend</h5>
+            <div style="height: 300px;">
+                <canvas id="iotChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Alerts & Fault Logs -->
+    <div class="col-lg-4">
+        <div class="industrial-card p-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center justify-content-between">
+                <span><i class="fa-solid fa-bell text-warning me-2"></i>Threshold Alerts</span>
+                <span class="badge bg-dark border border-secondary" id="alert-count-badge">0 Alerts</span>
+            </h5>
+            <div id="alertsContainer" style="max-height: 280px; overflow-y: auto;">
+                <div class="alert alert-dark border-secondary small py-2 mb-2">System Initializing... Listening for ESP32/Pi MQTT topics.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hardware & Future IoT Integration Panel -->
+<div class="industrial-card p-4">
+    <h5 class="fw-bold text-info mb-3"><i class="fa-solid fa-network-wired me-2"></i>Future IoT Hardware & Gateway Integration Setup</h5>
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="p-3 bg-dark rounded border border-secondary">
+                <h6 class="fw-bold text-white mb-1"><i class="fa-solid fa-microchip text-warning me-2"></i>ESP32 Microcontroller</h6>
+                <small class="text-muted d-block">Wi-Fi / BLE Telemetry node transmitting strain gauge & temp sensors via REST API.</small>
+                <span class="badge bg-success mt-2">API Ready: /iot/iot-data</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-dark rounded border border-secondary">
+                <h6 class="fw-bold text-white mb-1"><i class="fa-brands fa-raspberry-pi text-danger me-2"></i>Raspberry Pi Edge Gateway</h6>
+                <small class="text-muted d-block">Executes lightweight YOLOv8 edge inference directly on trackside camera feeds.</small>
+                <span class="badge bg-info text-dark mt-2">Edge Supported</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-dark rounded border border-secondary">
+                <h6 class="fw-bold text-white mb-1"><i class="fa-solid fa-tower-broadcast text-info me-2"></i>MQTT Protocol Broker</h6>
+                <small class="text-muted d-block">Pub/Sub protocol integration for low-latency telemetry transmission (Port 1883).</small>
+                <span class="badge bg-secondary mt-2">Mosquitto Configured</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-3 bg-dark rounded border border-secondary">
+                <h6 class="fw-bold text-white mb-1"><i class="fa-solid fa-satellite-dish text-success me-2"></i>REST Telemetry API</h6>
+                <small class="text-muted d-block">JSON payloads accepted from external drone stations or trackside sensors.</small>
+                <span class="badge bg-primary mt-2">POST /iot/iot-data</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let iotChart = null;
+    const maxDataPoints = 15;
+    const timeLabels = [];
+    const tempSeries = [];
+    const vibSeries = [];
+    const stressSeries = [];
+
+    function initIoTChart() {
+        const ctx = document.getElementById('iotChart').getContext('2d');
+        iotChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [
+                    { label: 'Temperature (°C)', data: tempSeries, borderColor: '#e71d36', tension: 0.3 },
+                    { label: 'Vibration (g)', data: vibSeries, borderColor: '#ff9f1c', tension: 0.3 },
+                    { label: 'Stress (MPa)', data: stressSeries, borderColor: '#4cc9f0', tension: 0.3 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#e0e1dd' } } },
+                scales: {
+                    x: { ticks: { color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+    }
+
+    async function fetchIoTData(simulateFault = false) {
+        try {
+            const url = simulateFault ? '/iot/iot-data?simulate_fault=true' : '/iot/iot-data';
+            const res = await fetch(url);
+            const data = await res.json();
+
+            // Update Cards
+            document.getElementById('val-temp').innerText = data.temperature;
+            document.getElementById('val-vib').innerText = data.vibration;
+            document.getElementById('val-stress').innerText = data.stress;
+            document.getElementById('val-humidity').innerText = data.humidity;
+
+            // Chart update
+            const nowTime = new Date().toLocaleTimeString();
+            if (timeLabels.length >= maxDataPoints) {
+                timeLabels.shift();
+                tempSeries.shift();
+                vibSeries.shift();
+                stressSeries.shift();
+            }
+
+            timeLabels.push(nowTime);
+            tempSeries.push(data.temperature);
+            vibSeries.push(data.vibration);
+            stressSeries.push(data.stress);
+            if (iotChart) iotChart.update();
+
+            // Update Alerts
+            const alertContainer = document.getElementById('alertsContainer');
+            const alertBadge = document.getElementById('alert-count-badge');
+
+            if (data.alerts && data.alerts.length > 0) {
+                alertBadge.innerText = `${data.alerts.length} Alerts`;
+                alertBadge.className = 'badge bg-danger';
+                alertContainer.innerHTML = '';
+                data.alerts.forEach(alt => {
+                    alertContainer.innerHTML += `
+                        <div class="alert alert-danger border-danger small py-2 mb-2">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i> ${alt}
+                        </div>
+                    `;
+                });
+            } else {
+                alertBadge.innerText = '0 Alerts';
+                alertBadge.className = 'badge bg-dark border border-secondary';
+                alertContainer.innerHTML = `
+                    <div class="alert alert-success border-success small py-2 mb-2">
+                        <i class="fa-solid fa-circle-check me-1"></i> Track Telemetry Normal. All readings within safe operating limits.
+                    </div>
+                `;
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    initIoTChart();
+    setInterval(() => fetchIoTData(false), 3000);
+    fetchIoTData(false);
+</script>
+{% endblock %}

@@ -1,0 +1,15 @@
+__pycache__
+*.py[cod]
+*$py.class
+.git
+.gitignore
+.idea
+.vscode
+venv/
+env/
+.env
+dataset_path.txt
+*.cache
+runs/classify/bench_run
+runs/classify/runs
+runs/classify/*/weights/last.pt

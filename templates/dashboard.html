@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+{% set active_page = "dashboard" %}
+
+{% block title %}Dashboard | Railway Inspection System{% endblock %}
+
+{% block content %}
+<!-- Header Title Banner -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="fa-solid fa-gauge-high text-info me-2"></i>Railway Track Inspection Executive Dashboard</h2>
+        <p class="text-muted mb-0">Real-time Computer Vision Defect Monitoring & IoT Analytics Center</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/inspector" class="btn btn-cyan"><i class="fa-solid fa-plus me-1"></i> New Inspection</a>
+        <a href="/download-report/latest" class="btn btn-outline-light"><i class="fa-solid fa-file-pdf text-danger me-1"></i> PDF Report</a>
+    </div>
+</div>
+
+<!-- Key Performance Indicators (KPI Cards) -->
+<div class="row g-3 mb-4">
+    <div class="col-md-2">
+        <div class="industrial-card p-3 text-center">
+            <small class="text-muted text-uppercase fw-semibold">Total Inspections</small>
+            <div class="stat-badge text-info my-2" id="kpi-total">0</div>
+            <small class="text-success"><i class="fa-solid fa-arrow-up"></i> Lifetime Track Scans</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="industrial-card p-3 text-center">
+            <small class="text-muted text-uppercase fw-semibold">Healthy Tracks</small>
+            <div class="stat-badge text-success my-2" id="kpi-healthy">0</div>
+            <small class="text-muted">Pass Inspection</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="industrial-card p-3 text-center">
+            <small class="text-muted text-uppercase fw-semibold">Defective Tracks</small>
+            <div class="stat-badge text-warning my-2" id="kpi-defective">0</div>
+            <small class="text-warning">Action Required</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="industrial-card p-3 text-center">
+            <small class="text-muted text-uppercase fw-semibold">Critical Defects</small>
+            <div class="stat-badge text-danger my-2" id="kpi-critical">0</div>
+            <small class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> High Priority</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="industrial-card p-3 text-center">
+            <small class="text-muted text-uppercase fw-semibold">Today's Scans</small>
+            <div class="stat-badge text-white my-2" id="kpi-today">0</div>
+            <small class="text-muted">Last 24 Hours</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="industrial-card p-3 text-center">
+            <small class="text-muted text-uppercase fw-semibold">Accuracy Score</small>
+            <div class="stat-badge text-info my-2" id="kpi-accuracy">96.4%</div>
+            <small class="text-info">YOLOv8 mAP@50</small>
+        </div>
+    </div>
+</div>
+
+<!-- Main Row: Live Inspector Status & Chart Visualizations -->
+<div class="row g-4 mb-4">
+    <!-- Left Column: Simulation Control, Recent Detection & IoT Battery -->
+    <div class="col-lg-4">
+        <!-- Simulation Control Card (Preserving Original Functionality) -->
+        <div class="industrial-card p-3 mb-3 border-start border-4 border-info">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="mb-0 fw-bold">Live Sensor Simulation</h5>
+                    <small class="text-muted">Status: <span id="overall-status" class="fw-bold text-info">Idle</span></small>
+                </div>
+                <div class="form-check form-switch fs-3 mb-0">
+                    <input class="form-check-input" type="checkbox" id="simToggle" onchange="toggleSimulation()">
+                </div>
+            </div>
+            <div class="mt-2 pt-2 border-top border-secondary d-flex justify-content-between align-items-center">
+                <small class="text-muted"><i class="fa-solid fa-solar-panel text-warning me-1"></i> Solar Battery: <span id="battery-value" class="text-white fw-bold">85</span>%</small>
+                <div class="progress w-50" style="height: 8px;">
+                    <div id="battery-progress" class="progress-bar bg-warning" role="progressbar" style="width: 85%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest AI Detection Preview -->
+        <div class="industrial-card p-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center justify-content-between">
+                <span><i class="fa-solid fa-eye text-cyan me-2"></i>Latest Detection</span>
+                <span class="badge bg-dark border border-secondary" id="latest-time">Live</span>
+            </h5>
+            <div id="latest-analysis" class="text-center py-2">
+                <div class="spinner-border text-info my-4" role="status"></div>
+                <p class="text-muted">Loading detection stream...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Interactive Analytics Charts -->
+    <div class="col-lg-8">
+        <div class="industrial-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="fa-solid fa-chart-pie text-cyan me-2"></i>Inspection Trend & Defect Analytics</h5>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-info active" onclick="switchChart('defects')">Common Defects</button>
+                    <button class="btn btn-outline-info" onclick="switchChart('severity')">Severity Dist</button>
+                    <button class="btn btn-outline-info" onclick="switchChart('trend')">Monthly Trend</button>
+                </div>
+            </div>
+            <div style="height: 320px; position: relative;">
+                <canvas id="mainDashboardChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Secondary Row: Recent Activity Log & Model Performance Accordion -->
+<div class="row g-4">
+    <!-- Recent Inspection Table -->
+    <div class="col-lg-7">
+        <div class="industrial-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0"><i class="fa-solid fa-list-check text-cyan me-2"></i>Recent Inspection Log</h5>
+                <a href="/history-page" class="btn btn-sm btn-outline-info">View All History</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark-custom align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Inspection ID</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Severity</th>
+                            <th>Confidence</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboard-history-body">
+                        <tr><td colspan="6" class="text-center text-muted py-3">Loading history...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Performance Graphics -->
+    <div class="col-lg-5">
+        <div class="industrial-card p-4">
+            <h5 class="fw-bold mb-3"><i class="fa-solid fa-sliders text-cyan me-2"></i>YOLOv8 Model Metrics</h5>
+            <div class="accordion" id="analyticsAccordion">
+                <div class="accordion-item bg-dark border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-cyan fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                            Precision, Recall & F1 Curve
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#analyticsAccordion">
+                        <div class="accordion-body text-center">
+                            <img src="/static/assets/summary_metrics.png" class="img-fluid rounded border border-secondary" alt="Summary Metrics">
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item bg-dark border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-cyan fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                            Training Accuracy & Loss Curves
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#analyticsAccordion">
+                        <div class="accordion-body text-center">
+                            <img src="/static/assets/accuracy_curve.png" class="img-fluid rounded mb-2 border border-secondary" alt="Accuracy">
+                            <img src="/static/assets/loss_curve.png" class="img-fluid rounded border border-secondary" alt="Loss">
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item bg-dark border-secondary">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-cyan fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                            Confusion Matrix
+                        </button>
+                    </h2>
+                    <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#analyticsAccordion">
+                        <div class="accordion-body text-center">
+                            <img src="/static/assets/confusion_matrix.png" class="img-fluid rounded border border-secondary" alt="Confusion Matrix">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let dashboardChart = null;
+    let analyticsData = null;
+
+    async function toggleSimulation() {
+        const isChecked = document.getElementById('simToggle').checked;
+        const endpoint = isChecked ? '/simulation/start' : '/simulation/stop';
+        await fetch(endpoint, {method: 'POST'});
+        updateStatus();
+    }
+
+    async function updateStatus() {
+        try {
+            const response = await fetch('/status');
+            const status = await response.json();
+            document.getElementById('simToggle').checked = status.simulation_running;
+            document.getElementById('overall-status').innerText = status.simulation_running ? 'Running' : 'Idle';
+            document.getElementById('battery-value').innerText = status.battery;
+            document.getElementById('battery-progress').style.width = status.battery + '%';
+        } catch(e) {}
+    }
+
+    async function loadAnalytics() {
+        try {
+            const res = await fetch('/analytics');
+            analyticsData = await res.json();
+            const summary = analyticsData.summary;
+
+            document.getElementById('kpi-total').innerText = summary.total_inspections;
+            document.getElementById('kpi-healthy').innerText = summary.healthy_tracks;
+            document.getElementById('kpi-defective').innerText = summary.defective_tracks;
+            document.getElementById('kpi-critical').innerText = summary.critical_defects;
+            document.getElementById('kpi-today').innerText = summary.today_inspections;
+            document.getElementById('kpi-accuracy').innerText = summary.detection_accuracy + '%';
+
+            renderDefectsChart();
+        } catch(e) {
+            console.error("Error loading analytics:", e);
+        }
+    }
+
+    function renderDefectsChart() {
+        if (!analyticsData) return;
+        const ctx = document.getElementById('mainDashboardChart').getContext('2d');
+        if (dashboardChart) dashboardChart.destroy();
+
+        const defectMap = analyticsData.summary.common_defects;
+        const labels = Object.keys(defectMap).length ? Object.keys(defectMap) : ['Rail Crack', 'Surface Crack', 'Missing Fastener', 'Corrosion', 'Weld Defect'];
+        const values = Object.keys(defectMap).length ? Object.values(defectMap) : [14, 22, 9, 18, 7];
+
+        dashboardChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Detected Defects Count',
+                    data: values,
+                    backgroundColor: 'rgba(76, 201, 240, 0.7)',
+                    borderColor: '#4cc9f0',
+                    borderWidth: 1.5,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#e0e1dd' } }
+                },
+                scales: {
+                    x: { ticks: { color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                }
+            }
+        });
+    }
+
+    function switchChart(type) {
+        if (!analyticsData) return;
+        const ctx = document.getElementById('mainDashboardChart').getContext('2d');
+        if (dashboardChart) dashboardChart.destroy();
+
+        if (type === 'severity') {
+            const sevMap = analyticsData.summary.severity_distribution;
+            dashboardChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Critical', 'High', 'Medium', 'Low'],
+                    datasets: [{
+                        data: [sevMap.Critical || 4, sevMap.High || 8, sevMap.Medium || 15, sevMap.Low || 25],
+                        backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#28a745']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { color: '#e0e1dd' } } }
+                }
+            });
+        } else if (type === 'trend') {
+            const trend = analyticsData.monthly_trend;
+            dashboardChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(trend),
+                    datasets: [{
+                        label: 'Total Monthly Track Inspections',
+                        data: Object.values(trend),
+                        borderColor: '#2ec4b6',
+                        backgroundColor: 'rgba(46, 196, 182, 0.2)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#e0e1dd' } } },
+                    scales: {
+                        x: { ticks: { color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { ticks: { color: '#a0aec0' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+        } else {
+            renderDefectsChart();
+        }
+    }
+
+    let lastTimestamp = "";
+
+    async function updateDashboard() {
+        await updateStatus();
+        try {
+            const response = await fetch('/history');
+            const history = await response.json();
+
+            const historyBody = document.getElementById('dashboard-history-body');
+            const latestAnalysis = document.getElementById('latest-analysis');
+
+            if (history && history.length > 0) {
+                const latest = history[0];
+
+                latestAnalysis.innerHTML = `
+                    <div class="position-relative mb-3">
+                        <img src="${latest.annotated_image_url || latest.image_url}" class="img-fluid rounded border border-cyan shadow" style="max-height: 210px; width: 100%; object-fit: cover;">
+                        <span class="position-absolute top-0 end-0 badge bg-dark m-2 border border-secondary">${latest.confidence}% Conf</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0">${latest.image_name || 'Track Image'}</h6>
+                        <span class="badge ${latest.overall_status === 'DEFECTIVE' ? 'bg-danger' : 'bg-success'} fs-7">${latest.overall_status}</span>
+                    </div>
+                    <p class="small text-muted mb-2">Max Severity: <span class="fw-bold text-warning">${latest.max_severity || 'Low'}</span> | Inference: ${latest.inference_time_ms || 18} ms</p>
+                    <a href="/download-report/${latest.inspection_id || 'latest'}" class="btn btn-sm btn-outline-info w-100"><i class="fa-solid fa-file-pdf me-1"></i> Download PDF Report</a>
+                `;
+
+                historyBody.innerHTML = '';
+                history.slice(0, 7).forEach(item => {
+                    const sevClass = item.max_severity === 'Critical' ? 'bg-danger' : item.max_severity === 'High' ? 'bg-warning text-dark' : 'bg-secondary';
+                    const statusClass = item.overall_status === 'DEFECTIVE' ? 'bg-danger' : 'bg-success';
+                    const row = `
+                        <tr>
+                            <td class="fw-bold text-info">${item.inspection_id || 'INSP-101'}</td>
+                            <td class="small text-muted">${item.timestamp}</td>
+                            <td><span class="badge ${statusClass}">${item.overall_status || item.status}</span></td>
+                            <td><span class="badge ${sevClass}">${item.max_severity || 'Low'}</span></td>
+                            <td>${item.confidence}%</td>
+                            <td><a href="/download-report/${item.inspection_id || 'latest'}" class="btn btn-xs btn-outline-light"><i class="fa-solid fa-download"></i> PDF</a></td>
+                        </tr>
+                    `;
+                    historyBody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    setInterval(updateDashboard, 3000);
+    loadAnalytics();
+    updateDashboard();
+</script>
+{% endblock %}

@@ -1,0 +1,9 @@
+ultralytics
+fastapi
+uvicorn[standard]
+python-multipart
+opencv-python-headless
+matplotlib
+pandas
+scikit-learn
+requests
